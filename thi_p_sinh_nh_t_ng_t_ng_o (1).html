@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chúc Mừng Sinh Nhật Em Yêu 💖</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Family -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'pastel-pink': '#FFD1DC',
+                        'pastel-rose': '#FFE4E1',
+                        'pastel-cream': '#FFFDD0',
+                        'soft-red': '#FF6B8B',
+                        'deep-rose': '#D81B60'
+                    },
+                    fontFamily: {
+                        cursive: ['"Dancing Script"', 'cursive'],
+                        sans: ['"Quicksand"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #fff5f7 0%, #ffedf2 50%, #ffe4e8 100%);
+            overflow-x: hidden;
+        }
+
+        .font-cursive {
+            font-family: 'Dancing Script', cursive;
+        }
+
+        /* Canvas background for falling particles */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #ffe4e8;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ff9ebb;
+            border-radius: 4px;
+        }
+
+        /* Envelope Flip & Open Animation */
+        .envelope-wrapper {
+            perspective: 1000px;
+        }
+        .envelope {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            height: 280px;
+            background: #ffb6c1;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(216, 27, 96, 0.15);
+            cursor: pointer;
+            transition: transform 0.6s ease;
+        }
+        .envelope .flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 225px solid transparent;
+            border-right: 225px solid transparent;
+            border-top: 150px solid #ffa0b4;
+            transform-origin: top;
+            transition: transform 0.6s ease-in-out, z-index 0.6s;
+            z-index: 4;
+        }
+        @media (max-width: 480px) {
+            .envelope .flap {
+                border-left-width: 45vw;
+                border-right-width: 45vw;
+                border-top-width: 30vw;
+            }
+        }
+        .envelope.open .flap {
+            transform: rotateX(180deg);
+            z-index: 1;
+        }
+
+        /* Glassmorphism Effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 182, 193, 0.4);
+        }
+
+        /* Pulse Heart Animation */
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        .animate-heartbeat {
+            animation: heartbeat 1.5s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800 relative pb-12 selection:bg-pink-200 selection:text-pink-700">
+
+    <!-- Background Particle Canvas (Hearts & Flowers) -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Music Control Float Button -->
+    <div class="fixed top-5 right-5 z-50">
+        <button id="music-toggle" class="bg-white/80 backdrop-blur-md p-3.5 rounded-full shadow-lg border border-pink-200 text-pink-500 hover:text-pink-600 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12">
+            <i id="music-icon" class="fas font-solid fa-music text-xl"></i>
+        </button>
+    </div>
+
+    <!-- Hidden Audio Player -->
+    <!-- Nhạc nền Lãng Mạn (Royalty Free) -->
+    <audio id="bg-music" loop preload="auto">
+        <source src="https://assets.mixkit.co/music/preview/mixkit-romantic-view-783.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- MÀN HÌNH CHÀO MỞ ĐẦU (INTRO OVERLAY) -->
+    <div id="intro-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gradient-to-br from-pink-100/95 via-rose-100/95 to-pink-200/95 backdrop-blur-md transition-opacity duration-700">
+        <div class="text-center max-w-lg w-full bg-white/80 backdrop-blur-lg p-8 sm:p-10 rounded-3xl shadow-2xl border border-pink-200 transform transition-all duration-500 hover:shadow-pink-200/50">
+            <div class="w-24 h-24 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner animate-heartbeat">
+                <i class="fa-solid fa-gift text-4xl text-pink-500"></i>
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-3 font-cursive">Gửi Thiên Thần Của Anh ✨</h1>
+            <p class="text-gray-600 mb-8 leading-relaxed text-sm sm:text-base">
+                Hôm nay là một ngày cực kỳ đặc biệt! Anh có chuẩn bị một món quà nho nhỏ dành riêng cho em. Em đã sẵn sàng khám phá chưa? 💕
+            </p>
+            <button id="start-btn" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white font-semibold rounded-full shadow-lg hover:shadow-pink-300/50 transform hover:-translate-y-1 transition-all duration-300 text-lg tracking-wide flex items-center justify-center gap-2 mx-auto">
+                <span>Khám Phá Món Quà Bí Mật</span>
+                <i class="fa-solid fa-heart text-white animate-pulse"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- NỘI DUNG CHÍNH (MAIN CONTENT) -->
+    <main class="max-w-4xl mx-auto px-4 pt-12 sm:pt-16 relative z-20 space-y-16 sm:space-y-24">
+
+        <!-- Header / Banner Sinh Nhật -->
+        <section class="text-center space-y-4">
+            <div class="inline-block px-4 py-1.5 bg-pink-100 text-pink-600 rounded-full text-sm font-semibold tracking-wider uppercase mb-2 shadow-sm border border-pink-200">
+                🎉 Happy Birthday My Love 🎉
+            </div>
+            <h1 class="text-4xl sm:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-rose-500 to-deep-rose font-cursive tracking-wide leading-tight">
+                Chúc Mừng Sinh Nhật Em Yêu!
+            </h1>
+            <p class="text-gray-600 max-w-md mx-auto text-base sm:text-lg">
+                Cảm ơn em vì đã xuất hiện và làm cho thế giới của anh trở nên rực rỡ và ngọt ngào hơn mỗi ngày 💖
+            </p>
+        </section>
+
+        <!-- SEC 1: BỘ ĐẾM THỜI GIAN BÊN NHAU (LOVE COUNTDOWN) -->
+        <section class="glass-card rounded-3xl p-6 sm:p-10 shadow-xl border border-white/60">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 font-cursive mb-2 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-hourglass-half text-pink-400"></i>
+                    <span>Hành Trình Yêu Thương</span>
+                </h2>
+                <p class="text-xs sm:text-sm text-gray-500">Chúng ta đã cùng nhau đi qua biết bao kỷ niệm đáng nhớ</p>
+            </div>
+
+            <!-- Love Counter Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                <div class="bg-white/70 p-4 sm:p-5 rounded-2xl shadow-sm border border-pink-100 hover:scale-105 transition-transform duration-300">
+                    <span id="days-count" class="block text-3xl sm:text-4xl font-extrabold text-pink-500 font-sans">0</span>
+                    <span class="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider mt-1 block">Ngày</span>
+                </div>
+                <div class="bg-white/70 p-4 sm:p-5 rounded-2xl shadow-sm border border-pink-100 hover:scale-105 transition-transform duration-300">
+                    <span id="hours-count" class="block text-3xl sm:text-4xl font-extrabold text-pink-500 font-sans">0</span>
+                    <span class="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider mt-1 block">Giờ</span>
+                </div>
+                <div class="bg-white/70 p-4 sm:p-5 rounded-2xl shadow-sm border border-pink-100 hover:scale-105 transition-transform duration-300">
+                    <span id="minutes-count" class="block text-3xl sm:text-4xl font-extrabold text-pink-500 font-sans">0</span>
+                    <span class="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider mt-1 block">Phút</span>
+                </div>
+                <div class="bg-white/70 p-4 sm:p-5 rounded-2xl shadow-sm border border-pink-100 hover:scale-105 transition-transform duration-300">
+                    <span id="seconds-count" class="block text-3xl sm:text-4xl font-extrabold text-pink-500 font-sans">0</span>
+                    <span class="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider mt-1 block">Giây</span>
+                </div>
+            </div>
+            
+            <p id="love-start-date" class="text-center text-xs text-pink-400 mt-6 font-medium italic">
+                Kể từ ngày đặc biệt: 03/06/2026 💕
+            </p>
+        </section>
+
+        <!-- SEC 2: THƯ TINH / LỜI CHÚC (OPEN LETTER CARD) -->
+        <section class="flex flex-col items-center">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 font-cursive mb-1">
+                    Bức Thư Gửi Em 💌
+                </h2>
+                <p class="text-xs sm:text-sm text-gray-500">Chạm vào phong bì để mở lời chúc từ trái tim anh nhé</p>
+            </div>
+
+            <!-- Envelope Component -->
+            <div id="envelope-container" class="w-full flex justify-center cursor-pointer">
+                <div id="envelope" class="envelope flex items-center justify-center p-4">
+                    <div class="flap"></div>
+                    <div class="text-center z-10 space-y-2 pointer-events-none">
+                        <i class="fa-solid fa-heart text-4xl text-white animate-bounce"></i>
+                        <p class="text-white font-semibold text-lg drop-shadow">Nhấp để mở thư</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Letter Content (Hidden by default, shown on click/open) -->
+            <div id="letter-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+                <div class="glass-card max-w-xl w-full bg-white/95 p-6 sm:p-8 rounded-3xl shadow-2xl relative max-h-[85vh] overflow-y-auto border border-pink-200">
+                    <button id="close-letter" class="absolute top-4 right-4 text-gray-400 hover:text-pink-500 text-2xl w-8 h-8 flex items-center justify-center rounded-full hover:bg-pink-50 transition">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    
+                    <div class="space-y-4 text-gray-700 leading-relaxed font-sans">
+                        <div class="text-center pb-3 border-b border-pink-100">
+                            <h3 class="text-2xl font-bold text-pink-500 font-cursive">Gửi Công Chúa Của Anh 💖</h3>
+                        </div>
+                        <p>Chúc mừng sinh nhật em yêu - cô gái đáng yêu và tuyệt vời nhất trên thế giới này!</p>
+                        <p>Cảm ơn em đã đến bên anh, mang lại nụ cười, sự ấm áp và vô vàn khoảnh khắc ngọt ngào. Mỗi ngày có em bên cạnh đều là một ngày đặc biệt đối với anh.</p>
+                        <p>Tuổi mới, anh chúc em luôn luôn vui vẻ, luôn tự tin, xinh đẹp rạng rỡ và đạt được mọi ước mơ mà em mong muốn. Dù có chuyện gì xảy ra, nhớ rằng anh vẫn luôn ở đây, đồng hành và yêu thương em nhiều thật nhiều!</p>
+                        <p class="text-right font-cursive text-xl text-pink-600 pt-4">
+                            Yêu em hơn cả những gì anh có thể nói,<br>
+                            [Thanh Bình] ❤️
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+                <!-- Navigation Controls -->
+                <button id="prev-slide" class="absolute left-3 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white text-pink-600 p-3 rounded-full shadow-md backdrop-blur-sm transition opacity-80 group-hover:opacity-100">
+                    <i class="fa-solid fa-chevron-left text-lg"></i>
+                </button>
+                <button id="next-slide" class="absolute right-3 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white text-pink-600 p-3 rounded-full shadow-md backdrop-blur-sm transition opacity-80 group-hover:opacity-100">
+                    <i class="fa-solid fa-chevron-right text-lg"></i>
+                </button>
+
+                <!-- Carousel Dots -->
+                <div id="carousel-dots" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
+                    <button class="w-2.5 h-2.5 rounded-full bg-white/50 transition-all duration-300"></button>
+                    <button class="w-2.5 h-2.5 rounded-full bg-white/50 transition-all duration-300"></button>
+                    <button class="w-2.5 h-2.5 rounded-full bg-white/50 transition-all duration-300"></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEC 4: HỘP ĐIỀU ƯỚC (WISH BOX WITH FIREWORKS) -->
+        <section class="glass-card rounded-3xl p-6 sm:p-10 shadow-xl border border-white/60 text-center space-y-6">
+            <div class="space-y-2">
+                <div class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto text-pink-500 text-2xl shadow-inner">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 font-cursive">Hộp Điều Ước Sinh Nhật 🌠</h2>
+                <p class="text-xs sm:text-sm text-gray-500 max-w-md mx-auto">
+                    Hãy nhắm mắt lại, ước một điều thật đẹp cho tuổi mới và gửi vào đây nhé!
+                </p>
+            </div>
+
+            <form id="wish-form" class="max-w-lg mx-auto space-y-4">
+                <div class="relative">
+                    <textarea id="wish-input" rows="3" placeholder="Nhập điều ước của em ở đây..." required class="w-full px-5 py-4 rounded-2xl bg-white/80 border border-pink-200 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent text-gray-700 placeholder-gray-400 shadow-inner resize-none text-sm sm:text-base"></textarea>
+                </div>
+                <button type="submit" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white font-semibold rounded-full shadow-md hover:shadow-pink-300/50 transform hover:-translate-y-0.5 transition duration-300 text-base flex items-center justify-center gap-2 mx-auto">
+                    <span>Gửi Điều Ước Lên Vì Sao</span>
+                    <i class="fa-solid fa-paper-plane text-sm"></i>
+                </button>
+            </form>
+
+            <!-- Wish Received Confirmation Container -->
+            <div id="wish-result" class="hidden p-4 rounded-2xl bg-pink-50 border border-pink-200 text-pink-700 font-medium text-sm sm:text-base animate-fade-in">
+                <i class="fa-solid fa-circle-check text-pink-500 mr-2"></i>
+                Điều ước của em đã được gửi tới vũ trụ! Anh tin chắc rằng nó sẽ thành hiện thực ✨
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="text-center pt-8 border-t border-pink-200/50 text-gray-500 text-xs sm:text-sm space-y-2">
+            <p class="flex items-center justify-center gap-1">
+                <span>Created with</span>
+                <i class="fa-solid fa-heart text-pink-500 animate-pulse"></i>
+                <span>just for you</span>
+            </p>
+            <p>© Happy Birthday My Love. Forever & Always.</p>
+        </footer>
+
+    </main>
+
+    <!-- SCRIPTS LOGIC -->
+    <script>
+        // --- 1. SET DATE FOR LOVE COUNTDOWN ---
+        // Bạn có thể thay đổi ngày bắt đầu yêu ở đây (Năm, Tháng - 1, Ngày)
+        const loveStartDate = new Date(2026,05,03); // 22/11/2026
+
+        function updateCountdown() {
+            const now = new Date();
+            const diff = now - loveStartDate;
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((diff / 1000 / 60) % 60);
+            const seconds = Math.floor((diff / 1000) % 60);
+
+            document.getElementById('days-count').innerText = days;
+            document.getElementById('hours-count').innerText = hours < 10 ? '0' + hours : hours;
+            document.getElementById('minutes-count').innerText = minutes < 10 ? '0' + minutes : minutes;
+            document.getElementById('seconds-count').innerText = seconds < 10 ? '0' + seconds : seconds;
+        }
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+
+        // --- 2. AUDIO MUSIC PLAYER TOGGLE ---
+        const bgMusic = document.getElementById('bg-music');
+        const musicBtn = document.getElementById('music-toggle');
+        const musicIcon = document.getElementById('music-icon');
+        let isPlaying = false;
+
+        function toggleMusic() {
+            if (isPlaying) {
+                bgMusic.pause();
+                musicIcon.classList.remove('fa-music');
+                musicIcon.classList.add('fa-volume-xmark');
+                musicBtn.classList.remove('text-pink-500');
+                musicBtn.classList.add('text-gray-400');
+            } else {
+                bgMusic.play().then(() => {
+                    musicIcon.classList.remove('fa-volume-xmark');
+                    musicIcon.classList.add('fa-music');
+                    musicBtn.classList.remove('text-gray-400');
+                    musicBtn.classList.add('text-pink-500');
+                }).catch(e => console.log("Audio play error:", e));
+            }
+            isPlaying = !isPlaying;
+        }
+
+        musicBtn.addEventListener('click', toggleMusic);
+
+        // Start button hides intro and plays music
+        document.getElementById('start-btn').addEventListener('click', () => {
+            document.getElementById('intro-modal').classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                document.getElementById('intro-modal').style.display = 'none';
+            }, 700);
+            
+            // Trigger Confetti Intro Effect
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+
+            // Try auto play music on user gesture
+            if (!isPlaying) {
+                toggleMusic();
+            }
+        });
+
+        // --- 3. ENVELOPE & LETTER MODAL ---
+        const envelope = document.getElementById('envelope');
+        const letterModal = document.getElementById('letter-modal');
+        const closeLetter = document.getElementById('close-letter');
+
+        envelope.addEventListener('click', () => {
+            envelope.classList.add('open');
+            setTimeout(() => {
+                letterModal.classList.remove('hidden');
+            }, 500);
+        });
+
+        closeLetter.addEventListener('click', () => {
+            letterModal.classList.add('hidden');
+        });
+
+        // Close letter on click outside modal content
+        letterModal.addEventListener('click', (e) => {
+            if (e.target === letterModal) {
+                letterModal.classList.add('hidden');
+            }
+        });
+
+        // --- 4. PHOTO CAROUSEL ---
+        const slides = document.getElementById('carousel-slides');
+        const dots = document.querySelectorAll('#carousel-dots button');
+        const totalSlides = 3;
+        let currentSlide = 0;
+
+        function updateCarousel() {
+            if (!slides) return;
+            slides.style.transform = `translateX(-${currentSlide * 100}%)`;
+            dots.forEach((dot, index) => {
+                if (index === currentSlide) {
+                    dot.classList.add('bg-white', 'w-6');
+                    dot.classList.remove('bg-white/50', 'w-2.5');
+                } else {
+                    dot.classList.remove('bg-white', 'w-6');
+                    dot.classList.add('bg-white/50', 'w-2.5');
+                }
+            });
+        }
+
+        const nextBtn = document.getElementById('next-slide');
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                currentSlide = (currentSlide + 1) % totalSlides;
+                updateCarousel();
+            });
+        }
+
+        const prevBtn = document.getElementById('prev-slide');
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+                updateCarousel();
+            });
+        }
+
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                currentSlide = index;
+                updateCarousel();
+            });
+        });
+
+        // Auto slide carousel every 4s if slides element exists
+        if (slides) {
+            setInterval(() => {
+                currentSlide = (currentSlide + 1) % totalSlides;
+                updateCarousel();
+            }, 4000);
+            updateCarousel();
+        }
+
+        // --- 5. WISH FORM & FIREWORKS CONFETTI ---
+        const wishForm = document.getElementById('wish-form');
+        const wishResult = document.getElementById('wish-result');
+
+        wishForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const wishText = document.getElementById('wish-input').value.trim();
+
+            if (wishText) {
+                wishResult.classList.remove('hidden');
+                document.getElementById('wish-input').value = '';
+
+                // Trigger celebratory fireworks (Confetti burst)
+                const duration = 3 * 1000;
+                const animationEnd = Date.now() + duration;
+                const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+
+                const interval = setInterval(function() {
+                    const timeLeft = animationEnd - Date.now();
+                    if (timeLeft <= 0) {
+                        return clearInterval(interval);
+                    }
+                    const particleCount = 50 * (timeLeft / duration);
+                    
+                    // random confetti origins
+                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+                }, 250);
+            }
+        });
+
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        // --- 6. FALLING HEARTS & FLOWERS CANVAS ANIMATION ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        const particles = [];
+        const particleTypes = ['heart', 'flower'];
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = -20;
+                this.size = Math.random() * 12 + 8;
+                this.speedY = Math.random() * 1.5 + 0.8;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.type = particleTypes[Math.floor(Math.random() * particleTypes.length)];
+                this.opacity = Math.random() * 0.6 + 0.4;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.02;
+            }
+
+            update() {
+                this.y += this.speedY;
+                this.x += Math.sin(this.y * 0.01) + this.speedX;
+                this.rotation += this.rotationSpeed;
+
+                if (this.y > height + 20) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.globalAlpha = this.opacity;
+
+                if (this.type === 'heart') {
+                    // Draw Heart
+                    ctx.fillStyle = '#ff8da1';
+                    ctx.beginPath();
+                    const d = this.size;
+                    ctx.moveTo(0, 0);
+                    ctx.bezierCurveTo(-d / 2, -d / 2, -d, d / 3, 0, d);
+                    ctx.bezierCurveTo(d, d / 3, d / 2, -d / 2, 0, 0);
+                    ctx.fill();
+                } else {
+                    // Draw Petal/Flower
+                    ctx.fillStyle = '#ffc0cb';
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, this.size / 2, this.size / 4, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.restore();
+            }
+        }
+
+        // Initialize particles
+        const particleCount = 35;
+        for (let i = 0; i < particleCount; i++) {
+            const p = new Particle();
+            p.y = Math.random() * height; // Spread initially
+            particles.push(p);
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.onload = function() {
+            animateParticles();
+        };
+    </script>
+</body>
+</html>
